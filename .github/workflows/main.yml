@@ -1,0 +1,48 @@
+name: Build Flutter Apps
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter pub get
+      
+      # 1. Compila o app para iOS sem exigir os certificados da Apple
+      - name: Build iOS App
+        run: flutter build ios --release --no-codesign
+        
+      # 2. Cria a estrutura padrão de um arquivo .ipa manualmente
+      - name: Package App into IPA
+        run: |
+          mkdir -p Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -qr app-release.ipa Payload
+          
+      # 3. Faz o upload do .ipa gerado para você baixar no GitHub
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-ipa
+          path: app-release.ipa
