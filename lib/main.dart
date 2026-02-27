@@ -54,26 +54,32 @@ class _TelaDeControleState extends State<TelaDeControle> {
       _robosEncontrados.clear();
     });
 
-    // Inicia a busca por 4 segundos
+    // 1. PRIMEIRO: Ligamos o "ouvido" do app para escutar os resultados em tempo real
+    FlutterBluePlus.scanResults.listen((results) {
+      if (mounted) {
+        setState(() {
+          // Filtra para mostrar apenas dispositivos que tenham "minisumo" no nome
+          _robosEncontrados = results.where((r) {
+            String nome = r.advertisementData.advName.isNotEmpty 
+                ? r.advertisementData.advName 
+                : r.device.platformName;
+            return nome.toLowerCase().contains("minisumo");
+          }).toList();
+        });
+      }
+    });
+
+    // 2. SEGUNDO: Mandamos a antena começar a procurar de fato
+    // O 'await' vai fazer o código pausar aqui por 4 segundos
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
-    // Fica ouvindo e atualizando a lista na tela em tempo real
-    FlutterBluePlus.scanResults.listen((results) {
+    // 3. TERCEIRO: Os 4 segundos passaram e o scan terminou. 
+    // Desligamos a animação de carregamento.
+    if (mounted) {
       setState(() {
-        // Filtra para mostrar apenas dispositivos que tenham "minisumo" no nome
-        _robosEncontrados = results.where((r) {
-          String nome = r.advertisementData.advName.isNotEmpty 
-              ? r.advertisementData.advName 
-              : r.device.platformName;
-          return nome.toLowerCase().contains("minisumo");
-        }).toList();
+        _isScanning = false;
       });
-    });
-
-    // Quando o tempo de scan acabar, desliga a animação de carregamento
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) setState(() => _isScanning = false);
-    });
+    }
   }
 
   // Nova função chamada quando você clica em um robô da lista
