@@ -32,12 +32,11 @@ class TelaDeControle extends StatefulWidget {
 class _TelaDeControleState extends State<TelaDeControle> {
   BluetoothDevice? _device;
   BluetoothCharacteristic? _servoCharacteristic;
-  
-  // Usando os valores do seu código C++
+
   double _servoPosicao = 170; 
   bool _isConnecting = false;
 
-  // COLOQUE AQUI OS MESMOS UUIDS DO SEU C++
+
   final String SERVICE_UUID = "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad";
   final String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
@@ -50,23 +49,33 @@ class _TelaDeControleState extends State<TelaDeControle> {
   void _scanAndConnect() async {
     setState(() => _isConnecting = true);
 
-    // Começa a escanear
+    // Tenta conectar aos dispositivos já conectados ao sistema
+    List<BluetoothDevice> systemDevices = await FlutterBluePlus.systemDevices([]);
+    
+    for (BluetoothDevice device in systemDevices) {
+      if (device.platformName == "minisumo" || device.advName == "minisumo") {
+        _device = device;
+        if (!_device!.isConnected) {
+          await _device!.connect(license: License.free);
+        }
+        _discoverServices();
+        setState(() => _isConnecting = false);
+        return; // Conectado, sai da função
+      }
+    }
+
+    // Se não encontrou nos dispositivos do sistema, inicia o scan
+    /* 
+    // Comentado para usar apenas dispositivos conectados 
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
-    // Fica ouvindo os resultados
     FlutterBluePlus.scanResults.listen((results) async {
-      for (ScanResult r in results) {
-        // Procura pelo nome que definimos no ESP32
-        if (r.device.advName == "minisumo" || r.device.platformName == "minisumo") {
-          FlutterBluePlus.stopScan();
-          _device = r.device;
-          
-          await _device!.connect(license: License.free);
-          _discoverServices();
-          break;
-        }
-      }
+       // ... existing scan logic ...
     });
+    */
+    
+    // Se não encontrou, apenas para o indicador de loading
+    setState(() => _isConnecting = false);
   }
 
   void _discoverServices() async {
