@@ -32,9 +32,12 @@ class TelaDeControle extends StatefulWidget {
 class _TelaDeControleState extends State<TelaDeControle> {
   BluetoothDevice? _device;
   BluetoothCharacteristic? _servoCharacteristic;
+  
+  // Lista para guardar os robôs encontrados no scan
+  List<ScanResult> _robosEncontrados = []; 
 
   double _servoPosicao = 170; 
-  bool _isConnecting = false;
+  bool _isScanning = false;
 
   final String SERVICE_UUID = "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad";
   final String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -42,50 +45,57 @@ class _TelaDeControleState extends State<TelaDeControle> {
   @override
   void initState() {
     super.initState();
-    _scanAndConnect();
+    _iniciarScan();
   }
 
-  void _scanAndConnect() async {
-    // Evita rodar dois scans ao mesmo tempo
-    if (_isConnecting) return; 
-
+  void _iniciarScan() async {
     setState(() {
-      _isConnecting = true;
-      _device = null;
-      _servoCharacteristic = null;
+      _isScanning = true;
+      _robosEncontrados.clear();
     });
 
-    // 1. Inicia a varredura no ar (Essencial para BLE)
+    // Inicia a busca por 4 segundos
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
-    // 2. Escuta os dispositivos que estão anunciando no ambiente
-    var subscription = FlutterBluePlus.scanResults.listen((results) async {
-      for (ScanResult r in results) {
-        if (r.advertisementData.advName == "minisumo" || r.device.platformName == "minisumo") {
-          
-          await FlutterBluePlus.stopScan();
-          _device = r.device;
-          
-          try {
-            await _device!.connect(license: License.free);
-            _discoverServices();
-          } catch (e) {
-            print("Erro ao conectar: $e");
-            setState(() => _isConnecting = false);
-          }
-          return; // Sai do loop se encontrou
-        }
-      }
+    // Fica ouvindo e atualizando a lista na tela em tempo real
+    FlutterBluePlus.scanResults.listen((results) {
+      setState(() {
+        // Filtra para mostrar apenas dispositivos que tenham "minisumo" no nome
+        _robosEncontrados = results.where((r) {
+          String nome = r.advertisementData.advName.isNotEmpty 
+              ? r.advertisementData.advName 
+              : r.device.platformName;
+          return nome.toLowerCase().contains("minisumo");
+        }).toList();
+      });
     });
 
-    // 3. Após 4.5 segundos (tempo do timeout + margem), verifica se achou algo.
-    // Se não achou, desliga o loading para mostrar o botão de tentar novamente.
-    Future.delayed(const Duration(milliseconds: 4500), () {
-      subscription.cancel();
-      if (_servoCharacteristic == null) {
-        setState(() => _isConnecting = false);
-      }
+    // Quando o tempo de scan acabar, desliga a animação de carregamento
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _isScanning = false);
     });
+  }
+
+  // Nova função chamada quando você clica em um robô da lista
+  void _conectarAoRobo(BluetoothDevice roboEscolhido) async {
+    await FlutterBluePlus.stopScan(); // Para de procurar
+    
+    setState(() {
+      _isScanning = true; // Mostra carregando enquanto conecta
+      _device = roboEscolhido;
+    });
+
+    try {
+      await _device!.connect(license: License.free);
+      _discoverServices();
+    } catch (e) {
+      print("Erro ao conectar: $e");
+      setState(() {
+        _device = null;
+        _isScanning = false;
+      });
+      // Opcional: Mostrar um alerta de erro na tela aqui
+    }
   }
 
   void _discoverServices() async {
@@ -98,12 +108,23 @@ class _TelaDeControleState extends State<TelaDeControle> {
           if (characteristic.uuid.toString() == CHARACTERISTIC_UUID) {
             setState(() {
               _servoCharacteristic = characteristic;
-              _isConnecting = false;
+              _isScanning = false; // Terminou de conectar e achar os serviços
             });
           }
         }
       }
     }
+  }
+
+  void _desconectar() async {
+    if (_device != null) {
+      await _device!.disconnect();
+    }
+    setState(() {
+      _device = null;
+      _servoCharacteristic = null;
+    });
+    _iniciarScan(); // Volta a procurar robôs
   }
 
   void _enviarPosicaoServo(double valor) async {
@@ -115,43 +136,90 @@ class _TelaDeControleState extends State<TelaDeControle> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Controle do robô')),
-      body: Center(
-        child: _isConnecting
-            ? const CircularProgressIndicator() 
-            : _servoCharacteristic == null
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Nenhum robô foi encontrado.'),
-                      const SizedBox(height: 10),
-                      const Text('Ligue o ESP32 e tente novamente.'),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _scanAndConnect, // Botão para tentar conectar de novo
-                        icon: const Icon(Icons.bluetooth_searching),
-                        label: const Text('Buscar Novamente'),
-                      )
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Posição do Servo', style: TextStyle(fontSize: 24)),
-                      Text('${_servoPosicao.toInt()}°', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
-                      Slider(
-                        value: _servoPosicao,
-                        min: 0, 
-                        max: 250, 
-                        onChanged: (novoValor) {
-                          setState(() {
-                            _servoPosicao = novoValor;
-                          });
-                          _enviarPosicaoServo(novoValor); 
-                        },
+      appBar: AppBar(
+        title: const Text('Controle do robô'),
+        actions: [
+          // Botão para desconectar e voltar para a lista
+          if (_device != null)
+            IconButton(
+              icon: const Icon(Icons.bluetooth_disabled),
+              onPressed: _desconectar,
+            ),
+        ],
+      ),
+      // Se não tem dispositivo conectado, mostra a TELA DE LISTA. Se tem, mostra a TELA DE CONTROLE.
+      body: _device == null ? _buildTelaDeLista() : _buildTelaDeControle(),
+    );
+  }
+
+  // TELA 1: A Lista de Dispositivos Encontrados
+  Widget _buildTelaDeLista() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton.icon(
+            onPressed: _isScanning ? null : _iniciarScan,
+            icon: _isScanning 
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+              : const Icon(Icons.search),
+            label: Text(_isScanning ? 'Buscando robôs...' : 'Buscar Robôs'),
+          ),
+        ),
+        Expanded(
+          child: _robosEncontrados.isEmpty && !_isScanning
+              ? const Center(child: Text('Nenhum robô encontrado.'))
+              : ListView.builder(
+                  itemCount: _robosEncontrados.length,
+                  itemBuilder: (context, index) {
+                    final robo = _robosEncontrados[index].device;
+                    final nome = _robosEncontrados[index].advertisementData.advName.isNotEmpty 
+                        ? _robosEncontrados[index].advertisementData.advName 
+                        : robo.platformName;
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        leading: const Icon(Icons.memory, color: Color.fromARGB(255, 187, 1, 1)),
+                        title: Text(nome.isNotEmpty ? nome : 'Dispositivo Desconhecido'),
+                        subtitle: Text(robo.remoteId.toString()), // No Android mostra o MAC, no iOS mostra o UUID
+                        trailing: ElevatedButton(
+                          onPressed: () => _conectarAoRobo(robo),
+                          child: const Text('Conectar'),
+                        ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  // TELA 2: Os Sliders e Controles
+  Widget _buildTelaDeControle() {
+    if (_servoCharacteristic == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Posição do Servo', style: TextStyle(fontSize: 24)),
+          Text('${_servoPosicao.toInt()}°', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+          Slider(
+            value: _servoPosicao,
+            min: 0, 
+            max: 250, 
+            onChanged: (novoValor) {
+              setState(() {
+                _servoPosicao = novoValor;
+              });
+              _enviarPosicaoServo(novoValor); 
+            },
+          ),
+        ],
       ),
     );
   }
