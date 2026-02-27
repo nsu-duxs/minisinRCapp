@@ -36,7 +36,6 @@ class _TelaDeControleState extends State<TelaDeControle> {
   double _servoPosicao = 170; 
   bool _isConnecting = false;
 
-
   final String SERVICE_UUID = "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad";
   final String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
@@ -47,35 +46,46 @@ class _TelaDeControleState extends State<TelaDeControle> {
   }
 
   void _scanAndConnect() async {
-    setState(() => _isConnecting = true);
+    // Evita rodar dois scans ao mesmo tempo
+    if (_isConnecting) return; 
 
-    // Tenta conectar aos dispositivos já conectados ao sistema
-    List<BluetoothDevice> systemDevices = await FlutterBluePlus.systemDevices([]);
-    
-    for (BluetoothDevice device in systemDevices) {
-      if (device.platformName == "minisumo" || device.advName == "minisumo") {
-        _device = device;
-        if (!_device!.isConnected) {
-          await _device!.connect(license: License.free);
-        }
-        _discoverServices();
-        setState(() => _isConnecting = false);
-        return; // Conectado, sai da função
-      }
-    }
+    setState(() {
+      _isConnecting = true;
+      _device = null;
+      _servoCharacteristic = null;
+    });
 
-    // Se não encontrou nos dispositivos do sistema, inicia o scan
-    /* 
-    // Comentado para usar apenas dispositivos conectados 
+    // 1. Inicia a varredura no ar (Essencial para BLE)
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
-    FlutterBluePlus.scanResults.listen((results) async {
-       // ... existing scan logic ...
+    // 2. Escuta os dispositivos que estão anunciando no ambiente
+    var subscription = FlutterBluePlus.scanResults.listen((results) async {
+      for (ScanResult r in results) {
+        if (r.advertisementData.advName == "minisumo" || r.device.platformName == "minisumo") {
+          
+          await FlutterBluePlus.stopScan();
+          _device = r.device;
+          
+          try {
+            await _device!.connect(license: License.free);
+            _discoverServices();
+          } catch (e) {
+            print("Erro ao conectar: $e");
+            setState(() => _isConnecting = false);
+          }
+          return; // Sai do loop se encontrou
+        }
+      }
     });
-    */
-    
-    // Se não encontrou, apenas para o indicador de loading
-    setState(() => _isConnecting = false);
+
+    // 3. Após 4.5 segundos (tempo do timeout + margem), verifica se achou algo.
+    // Se não achou, desliga o loading para mostrar o botão de tentar novamente.
+    Future.delayed(const Duration(milliseconds: 4500), () {
+      subscription.cancel();
+      if (_servoCharacteristic == null) {
+        setState(() => _isConnecting = false);
+      }
+    });
   }
 
   void _discoverServices() async {
@@ -98,7 +108,6 @@ class _TelaDeControleState extends State<TelaDeControle> {
 
   void _enviarPosicaoServo(double valor) async {
     if (_servoCharacteristic != null) {
-      // Envia o valor como uma lista contendo 1 byte (convertido para int)
       await _servoCharacteristic!.write([valor.toInt()], withoutResponse: true);
     }
   }
@@ -109,9 +118,22 @@ class _TelaDeControleState extends State<TelaDeControle> {
       appBar: AppBar(title: const Text('Controle do robô')),
       body: Center(
         child: _isConnecting
-            ? const CircularProgressIndicator() // Mostra carregando enquanto conecta
+            ? const CircularProgressIndicator() 
             : _servoCharacteristic == null
-                ? const Text('Nenhum robo foi encontrado. Ligue o ESP32.')
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Nenhum robô foi encontrado.'),
+                      const SizedBox(height: 10),
+                      const Text('Ligue o ESP32 e tente novamente.'),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _scanAndConnect, // Botão para tentar conectar de novo
+                        icon: const Icon(Icons.bluetooth_searching),
+                        label: const Text('Buscar Novamente'),
+                      )
+                    ],
+                  )
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -119,13 +141,13 @@ class _TelaDeControleState extends State<TelaDeControle> {
                       Text('${_servoPosicao.toInt()}°', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
                       Slider(
                         value: _servoPosicao,
-                        min: 0, // O seu inicioServo do C++
-                        max: 250, // O seu máximo do C++
+                        min: 0, 
+                        max: 250, 
                         onChanged: (novoValor) {
                           setState(() {
                             _servoPosicao = novoValor;
                           });
-                          _enviarPosicaoServo(novoValor); // Envia para o ESP32
+                          _enviarPosicaoServo(novoValor); 
                         },
                       ),
                     ],
