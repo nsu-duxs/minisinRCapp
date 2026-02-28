@@ -33,14 +33,19 @@ class _TelaDeControleState extends State<TelaDeControle> {
   BluetoothDevice? _device;
   BluetoothCharacteristic? _servoCharacteristic;
   
-  // Lista para guardar os robôs encontrados no scan
+  // A lista dos que aparecem na tela
   List<ScanResult> _robosEncontrados = []; 
+  
+  // ADICIONE ESTA LINHA AQUI: A lista dos que você deslizou para apagar
+  final List<String> _robosIgnorados = [];
 
   double _servoPosicao = 170; 
   bool _isScanning = false;
 
-  final String SERVICE_UUID = "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad";
-  final String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+  
+  final String serviceUuid = "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad";
+  
+  final String characteristicUuid = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
   @override
   void initState() {
@@ -54,23 +59,22 @@ class _TelaDeControleState extends State<TelaDeControle> {
       _robosEncontrados.clear();
     });
 
-    // 1. Escuta os resultados
     FlutterBluePlus.scanResults.listen((results) {
       if (mounted) {
         setState(() {
-          // Como vamos escanear pelo UUID, TUDO que cair aqui é o nosso robô!
-          // Não precisamos mais checar o nome.
-          _robosEncontrados = results; 
+          // Vamos mostrar TODOS os dispositivos BLE próximos que tenham nome
+          // ou que não estejam na nossa lista de ignorados
+          _robosEncontrados = results.where((r) {
+            bool ignorado = _robosIgnorados.contains(r.device.remoteId.toString());
+            // Mostra se não estiver ignorado E (tiver um nome válido OU for o robô que queremos)
+            return !ignorado; 
+          }).toList();
         });
       }
     });
 
-    // 2. BUSCA CIRÚRGICA: Ignora nomes e procura direto a "identidade" do ESP32.
-    // Isso fura o bloqueio do iOS!
-    await FlutterBluePlus.startScan(
-      withServices: [Guid(SERVICE_UUID)], // O app só vai enxergar o seu robô
-      timeout: const Duration(seconds: 4)
-    );
+    // Removemos o withServices para o iPhone enxergar tudo!
+    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
     if (mounted) setState(() => _isScanning = false);
   }
@@ -101,9 +105,9 @@ class _TelaDeControleState extends State<TelaDeControle> {
 
       for (BluetoothService service in services) {
         // Usa toLowerCase() por segurança, pois o UUID deve ser todo minúsculo
-        if (service.uuid.toString().toLowerCase() == SERVICE_UUID.toLowerCase()) {
+        if (service.uuid.toString().toLowerCase() == serviceUuid.toLowerCase()) {
           for (BluetoothCharacteristic characteristic in service.characteristics) {
-            if (characteristic.uuid.toString().toLowerCase() == CHARACTERISTIC_UUID.toLowerCase()) {
+            if (characteristic.uuid.toString().toLowerCase() == characteristicUuid.toLowerCase()) {
               setState(() {
                 _servoCharacteristic = characteristic;
               });
