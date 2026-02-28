@@ -54,71 +54,75 @@ class _TelaDeControleState extends State<TelaDeControle> {
       _robosEncontrados.clear();
     });
 
-    // 1. PRIMEIRO: Ligamos o "ouvido" do app para escutar os resultados em tempo real
+    // 1. Escuta os resultados
     FlutterBluePlus.scanResults.listen((results) {
       if (mounted) {
         setState(() {
-          // Filtra para mostrar apenas dispositivos que tenham "minisumo" no nome
-          _robosEncontrados = results.where((r) {
-            String nome = r.advertisementData.advName.isNotEmpty 
-                ? r.advertisementData.advName 
-                : r.device.platformName;
-            return nome.toLowerCase().contains("minisumo");
-          }).toList();
+          // Como vamos escanear pelo UUID, TUDO que cair aqui é o nosso robô!
+          // Não precisamos mais checar o nome.
+          _robosEncontrados = results; 
         });
       }
     });
 
-    // 2. SEGUNDO: Mandamos a antena começar a procurar de fato
-    // O 'await' vai fazer o código pausar aqui por 4 segundos
-    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+    // 2. BUSCA CIRÚRGICA: Ignora nomes e procura direto a "identidade" do ESP32.
+    // Isso fura o bloqueio do iOS!
+    await FlutterBluePlus.startScan(
+      withServices: [Guid(SERVICE_UUID)], // O app só vai enxergar o seu robô
+      timeout: const Duration(seconds: 4)
+    );
 
-    // 3. TERCEIRO: Os 4 segundos passaram e o scan terminou. 
-    // Desligamos a animação de carregamento.
-    if (mounted) {
-      setState(() {
-        _isScanning = false;
-      });
-    }
+    if (mounted) setState(() => _isScanning = false);
   }
 
-  // Nova função chamada quando você clica em um robô da lista
   void _conectarAoRobo(BluetoothDevice roboEscolhido) async {
-    await FlutterBluePlus.stopScan(); // Para de procurar
+    await FlutterBluePlus.stopScan(); 
     
     setState(() {
-      _isScanning = true; // Mostra carregando enquanto conecta
       _device = roboEscolhido;
     });
 
     try {
-      await _device!.connect(license: License.free);
+      // Adicionamos um timeout de 7 segundos. Se o Android travar, ele desiste.
+      await _device!.connect(timeout: const Duration(seconds: 7), license: License.free);
       _discoverServices();
     } catch (e) {
-      print("Erro ao conectar: $e");
-      setState(() {
-        _device = null;
-        _isScanning = false;
-      });
-      // Opcional: Mostrar um alerta de erro na tela aqui
+      print("Falha ao conectar: $e");
+      _desconectar(); // Volta para a tela inicial em caso de erro
     }
   }
 
   void _discoverServices() async {
     if (_device == null) return;
 
-    List<BluetoothService> services = await _device!.discoverServices();
-    for (BluetoothService service in services) {
-      if (service.uuid.toString() == SERVICE_UUID) {
-        for (BluetoothCharacteristic characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == CHARACTERISTIC_UUID) {
-            setState(() {
-              _servoCharacteristic = characteristic;
-              _isScanning = false; // Terminou de conectar e achar os serviços
-            });
+    try {
+      List<BluetoothService> services = await _device!.discoverServices();
+      bool encontrouCaracteristica = false;
+
+      for (BluetoothService service in services) {
+        // Usa toLowerCase() por segurança, pois o UUID deve ser todo minúsculo
+        if (service.uuid.toString().toLowerCase() == SERVICE_UUID.toLowerCase()) {
+          for (BluetoothCharacteristic characteristic in service.characteristics) {
+            if (characteristic.uuid.toString().toLowerCase() == CHARACTERISTIC_UUID.toLowerCase()) {
+              setState(() {
+                _servoCharacteristic = characteristic;
+              });
+              encontrouCaracteristica = true;
+            }
           }
         }
       }
+
+      // A SALVAÇÃO DO ANDROID: Se ele conectou mas os UUIDs estavam errados, 
+      // ele aborta a missão em vez de carregar infinitamente.
+      if (!encontrouCaracteristica) {
+        print("ERRO: O app conectou, mas os UUIDs do Flutter estão diferentes do ESP32!");
+        _desconectar(); 
+      }
+
+    } catch (e) {
+      print("Erro ao ler serviços: $e");
+      _desconectar();
     }
   }
 
