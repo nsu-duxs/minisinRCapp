@@ -62,18 +62,15 @@ class _TelaDeControleState extends State<TelaDeControle> {
     FlutterBluePlus.scanResults.listen((results) {
       if (mounted) {
         setState(() {
-          // Vamos mostrar TODOS os dispositivos BLE próximos que tenham nome
-          // ou que não estejam na nossa lista de ignorados
-          _robosEncontrados = results.where((r) {
-            bool ignorado = _robosIgnorados.contains(r.device.remoteId.toString());
-            // Mostra se não estiver ignorado E (tiver um nome válido OU for o robô que queremos)
-            return !ignorado; 
-          }).toList();
+          // LISTA TUDO! Sem filtro de nome, sem filtro de ignorados.
+          // Se o ESP32 estiver ligado, ele TEM que aparecer aqui, 
+          // mesmo que o nome apareça como "Unknown Device".
+          _robosEncontrados = results; 
         });
       }
     });
 
-    // Removemos o withServices para o iPhone enxergar tudo!
+    // Varredura de 4 segundos sem restrições
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
 
     if (mounted) setState(() => _isScanning = false);
@@ -96,36 +93,39 @@ class _TelaDeControleState extends State<TelaDeControle> {
     }
   }
 
-  void _discoverServices() async {
+void _discoverServices() async {
     if (_device == null) return;
+
+    print("=== INICIANDO RAIO-X DOS UUIDS ===");
 
     try {
       List<BluetoothService> services = await _device!.discoverServices();
-      bool encontrouCaracteristica = false;
+      bool encontrou = false;
 
-      for (BluetoothService service in services) {
-        // Usa toLowerCase() por segurança, pois o UUID deve ser todo minúsculo
-        if (service.uuid.toString().toLowerCase() == serviceUuid.toLowerCase()) {
-          for (BluetoothCharacteristic characteristic in service.characteristics) {
-            if (characteristic.uuid.toString().toLowerCase() == characteristicUuid.toLowerCase()) {
-              setState(() {
-                _servoCharacteristic = characteristic;
-              });
-              encontrouCaracteristica = true;
-            }
+      for (BluetoothService s in services) {
+        print("Serviço encontrado no ESP32: ${s.uuid}"); // Imprime o Serviço real
+        
+        for (BluetoothCharacteristic c in s.characteristics) {
+          print("  -> Característica encontrada: ${c.uuid}"); // Imprime a Característica real
+          
+          if (c.uuid.toString().toLowerCase() == characteristicUuid.toLowerCase()) {
+            setState(() {
+              _servoCharacteristic = c;
+            });
+            encontrou = true;
           }
         }
       }
 
-      // A SALVAÇÃO DO ANDROID: Se ele conectou mas os UUIDs estavam errados, 
-      // ele aborta a missão em vez de carregar infinitamente.
-      if (!encontrouCaracteristica) {
-        print("ERRO: O app conectou, mas os UUIDs do Flutter estão diferentes do ESP32!");
-        _desconectar(); 
+      if (!encontrou) {
+        print("❌ ABORTANDO: O Flutter procurava por '$characteristicUuid', mas o ESP32 não tem ele!");
+        _desconectar(); // É AQUI QUE O ANDROID ESTAVA DESCONECTANDO!
+      } else {
+        print("✅ SUCESSO! Característica encontrada e vinculada.");
       }
 
     } catch (e) {
-      print("Erro ao ler serviços: $e");
+      print("Erro no Raio-X: $e");
       _desconectar();
     }
   }
