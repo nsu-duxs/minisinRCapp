@@ -45,7 +45,23 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
     
     BleCommand(name: "arco shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7a2a2932-c806-4068-a3e3-e78e640a2a07"),
 
-    BleCommand(name: "arco shikiri horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "3d0ac383-e16a-4e42-870d-f2a859efe8c0")
+    BleCommand(name: "arco shikiri horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "3d0ac383-e16a-4e42-870d-f2a859efe8c0"),
+
+    BleCommand(name: "Arco borda anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "7d049e22-20f6-4e01-b018-7e8fcf8ac91b"),
+
+    BleCommand(name: "Arco borda horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "7bd3ee6f-c6a8-4591-852a-93af450cb940"),
+
+    BleCommand(name: "zigzag anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "65f2b4cc-cb29-4464-8695-f7d929fe3a79"),
+
+    BleCommand(name: "zigzag horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "22533c8f-130d-4775-8870-d4229cfd272d"),
+
+    BleCommand(name: "zigzag shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "ab9a4df9-74a5-4f4c-bfd2-4e1c7d40ba74"),
+
+    BleCommand(name: "zigzag shikiri horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "6e21271d-e8e9-4365-afad-66ebd5af0f28"),
+
+    BleCommand(name: "zigzag borda horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "adbfa60f-3068-4cfb-b0c4-382977d1dc23"),
+
+    BleCommand(name: "zigzag borda anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "f7ad38dd-acb1-4a53-baec-6aa279f9f35b"),
 
 
     // Adicione quantos quiser no mesmo modelo...
