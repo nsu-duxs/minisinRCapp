@@ -31,9 +31,23 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   final List<BleCommand> myCommands = [
     BleCommand(name: "servo", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aff04f40-41ab-493c-925d-37f4b2d92325"),
 
-    BleCommand(name: "giro45Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70")
+    BleCommand(name: "giro45 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70"),
 
+    BleCommand(name: "giro45 Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "17748c8a-2d2e-4a18-8054-6dd6db805d61"),
+
+    BleCommand(name: "giro 90 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "c238b3c8-27eb-455a-9eb7-26162b538a45"),
+
+    BleCommand(name: "giro 90 Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "48e04e0d-f49c-4d1f-b3c1-51cdd10cbd65"),
+
+    BleCommand(name: "arco anti-Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3"),
+
+    BleCommand(name: "arco Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d"),
     
+    BleCommand(name: "arco shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7a2a2932-c806-4068-a3e3-e78e640a2a07"),
+
+    BleCommand(name: "arco shikiri horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "3d0ac383-e16a-4e42-870d-f2a859efe8c0")
+
+
     // Adicione quantos quiser no mesmo modelo...
   ];
 
