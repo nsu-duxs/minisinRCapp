@@ -31,6 +31,9 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   final List<BleCommand> myCommands = [
     BleCommand(name: "servo", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aff04f40-41ab-493c-925d-37f4b2d92325"),
 
+    BleCommand(name: "giro45Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70")
+
+    
     // Adicione quantos quiser no mesmo modelo...
   ];
 
