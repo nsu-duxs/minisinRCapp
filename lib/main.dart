@@ -9,6 +9,7 @@ class BleCommand {
   final String name;
   final String serviceUuid;
   final String charUuid;
+  //final String tipo; // para adicionar alguns parametros que são float e bool
 
   BleCommand({required this.name, required this.serviceUuid, required this.charUuid});
 }
@@ -29,7 +30,11 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   
   // 2. CADASTRE SEUS UUIDS AQUI
   final List<BleCommand> myCommands = [
-    BleCommand(name: "servo", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aff04f40-41ab-493c-925d-37f4b2d92325"),
+    BleCommand(name: "servo posicão", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aff04f40-41ab-493c-925d-37f4b2d92325"),
+
+    BleCommand(name: "Servo inicial", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "31296a63-d6ce-4daf-a4a8-0f4d59907071"),
+
+    BleCommand(name: "Servo Ativado (0 ou 1)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74"),
 
     BleCommand(name: "giro45 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70"),
 
