@@ -1,240 +1,226 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
-void main() {
-  runApp(const MinisinRCapp());
+void main() => runApp(const MaterialApp(home: BLEWriteApp()));
+
+// 1. Classe para organizar seus comandos no código
+class BleCommand {
+  final String name;
+  final String serviceUuid;
+  final String charUuid;
+  //final String tipo; // para adicionar alguns parametros que são float e bool
+
+  BleCommand({required this.name, required this.serviceUuid, required this.charUuid});
 }
 
-class MinisinRCapp extends StatelessWidget {
-  const MinisinRCapp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Minisin RC App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 187, 1, 1)),
-      ),
-      home: const TelaDeControle(),
-    );
-  }
-}
-
-
-class TelaDeControle extends StatefulWidget {
-  const TelaDeControle({super.key});
+class BLEWriteApp extends StatefulWidget {
+  const BLEWriteApp({super.key});
 
   @override
-  State<TelaDeControle> createState() => _TelaDeControleState();
+  _BLEWriteAppState createState() => _BLEWriteAppState();
 }
 
-class _TelaDeControleState extends State<TelaDeControle> {
-  BluetoothDevice? _device;
-  BluetoothCharacteristic? _servoCharacteristic;
+class _BLEWriteAppState extends State<BLEWriteApp> {
+  BluetoothDevice? connectedDevice;
+  List<ScanResult> scanResults = [];
+  bool isScanning = false;
   
-  // A lista dos que aparecem na tela
-  List<ScanResult> _robosEncontrados = []; 
+  final TextEditingController _valueController = TextEditingController();
   
-  // ADICIONE ESTA LINHA AQUI: A lista dos que você deslizou para apagar
-  final List<String> _robosIgnorados = [];
+  // 2. CADASTRE SEUS UUIDS AQUI
+  final List<BleCommand> myCommands = [
+    BleCommand(name: "servo posicão", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aff04f40-41ab-493c-925d-37f4b2d92325"),
 
-  double _servoPosicao = 170; 
-  bool _isScanning = false;
+    BleCommand(name: "Servo inicial", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "31296a63-d6ce-4daf-a4a8-0f4d59907071"),
 
-  
-  final String serviceUuid = "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad";
-  
-  final String characteristicUuid = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+    BleCommand(name: "Servo Ativado (0 ou 1)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74"),
+
+    BleCommand(name: "giro45 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70"),
+
+    BleCommand(name: "giro45 Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "17748c8a-2d2e-4a18-8054-6dd6db805d61"),
+
+    BleCommand(name: "giro 90 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "c238b3c8-27eb-455a-9eb7-26162b538a45"),
+
+    BleCommand(name: "giro 90 Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "48e04e0d-f49c-4d1f-b3c1-51cdd10cbd65"),
+
+    BleCommand(name: "arco anti-Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3"),
+
+    BleCommand(name: "arco Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d"),
+    
+    BleCommand(name: "arco shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7a2a2932-c806-4068-a3e3-e78e640a2a07"),
+
+    BleCommand(name: "arco shikiri horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "3d0ac383-e16a-4e42-870d-f2a859efe8c0"),
+
+    BleCommand(name: "Arco borda anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "7d049e22-20f6-4e01-b018-7e8fcf8ac91b"),
+
+    BleCommand(name: "Arco borda horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "7bd3ee6f-c6a8-4591-852a-93af450cb940"),
+
+    BleCommand(name: "zigzag anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "65f2b4cc-cb29-4464-8695-f7d929fe3a79"),
+
+    BleCommand(name: "zigzag horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "22533c8f-130d-4775-8870-d4229cfd272d"),
+
+    BleCommand(name: "zigzag shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "ab9a4df9-74a5-4f4c-bfd2-4e1c7d40ba74"),
+
+    BleCommand(name: "zigzag shikiri horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "6e21271d-e8e9-4365-afad-66ebd5af0f28"),
+
+    BleCommand(name: "zigzag borda horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "adbfa60f-3068-4cfb-b0c4-382977d1dc23"),
+
+    BleCommand(name: "zigzag borda anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid:  "f7ad38dd-acb1-4a53-baec-6aa279f9f35b"),
+
+
+    // Adicione quantos quiser no mesmo modelo...
+  ];
+
+  // Comando selecionado no Dropdown
+  late BleCommand selectedCommand;
 
   @override
   void initState() {
     super.initState();
-    _iniciarScan();
+    selectedCommand = myCommands.first; // Começa com o primeiro da lista
+    _startInitialScan();
   }
 
-  void _iniciarScan() async {
-    setState(() {
-      _isScanning = true;
-      _robosEncontrados.clear();
-    });
-
+  void _startInitialScan() async {
+    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
     FlutterBluePlus.scanResults.listen((results) {
-      if (mounted) {
-        setState(() {
-          // LISTA TUDO! Sem filtro de nome, sem filtro de ignorados.
-          // Se o ESP32 estiver ligado, ele TEM que aparecer aqui, 
-          // mesmo que o nome apareça como "Unknown Device".
-          _robosEncontrados = results; 
-        });
-      }
+      setState(() => scanResults = results);
     });
-
-    // Varredura de 4 segundos sem restrições
-    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
-
-    if (mounted) setState(() => _isScanning = false);
   }
 
-  void _conectarAoRobo(BluetoothDevice roboEscolhido) async {
-    await FlutterBluePlus.stopScan(); 
-    
-    setState(() {
-      _device = roboEscolhido;
-    });
+  // Função para enviar o dado
+  Future<void> sendData() async {
+    if (connectedDevice == null) return;
 
-    try {
-      // Adicionamos um timeout de 7 segundos. Se o Android travar, ele desiste.
-      await _device!.connect(timeout: const Duration(seconds: 7), license: License.free);
-      _discoverServices();
-    } catch (e) {
-      print("Falha ao conectar: $e");
-      _desconectar(); // Volta para a tela inicial em caso de erro
+    int? val = int.tryParse(_valueController.text);
+    if (val == null || val < 0 || val > 255) {
+      _showMsg("Digite um valor entre 0 e 255");
+      return;
     }
-  }
-
-void _discoverServices() async {
-    if (_device == null) return;
-
-    print("=== INICIANDO RAIO-X DOS UUIDS ===");
 
     try {
-      List<BluetoothService> services = await _device!.discoverServices();
-      bool encontrou = false;
-
-      for (BluetoothService s in services) {
-        print("Serviço encontrado no ESP32: ${s.uuid}"); // Imprime o Serviço real
-        
-        for (BluetoothCharacteristic c in s.characteristics) {
-          print("  -> Característica encontrada: ${c.uuid}"); // Imprime a Característica real
-          
-          if (c.uuid.toString().toLowerCase() == characteristicUuid.toLowerCase()) {
-            setState(() {
-              _servoCharacteristic = c;
-            });
-            encontrou = true;
+      List<BluetoothService> services = await connectedDevice!.discoverServices();
+      
+      // Busca o serviço e a característica selecionados no Dropdown
+      for (var s in services) {
+        if (s.uuid.toString().toUpperCase().contains(selectedCommand.serviceUuid.toUpperCase())) {
+          for (var c in s.characteristics) {
+            if (c.uuid.toString().toUpperCase().contains(selectedCommand.charUuid.toUpperCase())) {
+              
+              await c.write([val], withoutResponse: false);
+              _showMsg("Enviado: ${selectedCommand.name} = $val");
+              return;
+            }
           }
         }
       }
-
-      if (!encontrou) {
-        print("❌ ABORTANDO: O Flutter procurava por '$characteristicUuid', mas o ESP32 não tem ele!");
-        _desconectar(); // É AQUI QUE O ANDROID ESTAVA DESCONECTANDO!
-      } else {
-        print("✅ SUCESSO! Característica encontrada e vinculada.");
-      }
-
+      _showMsg("Erro: UUID não encontrado no hardware!");
     } catch (e) {
-      print("Erro no Raio-X: $e");
-      _desconectar();
+      _showMsg("Erro na escrita: $e");
     }
   }
 
-  void _desconectar() async {
-    if (_device != null) {
-      await _device!.disconnect();
-    }
-    setState(() {
-      _device = null;
-      _servoCharacteristic = null;
-    });
-    _iniciarScan(); // Volta a procurar robôs
-  }
-
-  void _enviarPosicaoServo(double valor) async {
-    if (_servoCharacteristic != null) {
-      await _servoCharacteristic!.write([valor.toInt()], withoutResponse: true);
-    }
+  void _showMsg(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Controle do robô'),
-        actions: [
-          // Botão para desconectar e voltar para a lista
-          if (_device != null)
-            IconButton(
-              icon: const Icon(Icons.bluetooth_disabled),
-              onPressed: _desconectar,
-            ),
-        ],
+      appBar: AppBar(title: const Text("BLE Command Center")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: connectedDevice == null ? _buildScanList() : _buildControlPanel(),
       ),
-      // Se não tem dispositivo conectado, mostra a TELA DE LISTA. Se tem, mostra a TELA DE CONTROLE.
-      body: _device == null ? _buildTelaDeLista() : _buildTelaDeControle(),
     );
   }
 
-  // TELA 1: A Lista de Dispositivos Encontrados
-  Widget _buildTelaDeLista() {
+  // Widget da lista de escaneamento
+  Widget _buildScanList() {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton.icon(
-            onPressed: _isScanning ? null : _iniciarScan,
-            icon: _isScanning 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
-              : const Icon(Icons.search),
-            label: Text(_isScanning ? 'Buscando robôs...' : 'Buscar Robôs'),
-          ),
+        ElevatedButton(
+          onPressed: () => _startInitialScan(),
+          child: const Text("Escanear Novamente"),
         ),
         Expanded(
-          child: _robosEncontrados.isEmpty && !_isScanning
-              ? const Center(child: Text('Nenhum robô encontrado.'))
-              : ListView.builder(
-                  itemCount: _robosEncontrados.length,
-                  itemBuilder: (context, index) {
-                    final robo = _robosEncontrados[index].device;
-                    final nome = _robosEncontrados[index].advertisementData.advName.isNotEmpty 
-                        ? _robosEncontrados[index].advertisementData.advName 
-                        : robo.platformName;
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.memory, color: Color.fromARGB(255, 187, 1, 1)),
-                        title: Text(nome.isNotEmpty ? nome : 'Dispositivo Desconhecido'),
-                        subtitle: Text(robo.remoteId.toString()), // No Android mostra o MAC, no iOS mostra o UUID
-                        trailing: ElevatedButton(
-                          onPressed: () => _conectarAoRobo(robo),
-                          child: const Text('Conectar'),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          child: ListView.builder(
+            itemCount: scanResults.length,
+            itemBuilder: (context, i) => ListTile(
+              title: Text(scanResults[i].device.platformName.isEmpty ? "Disp. Desconhecido" : scanResults[i].device.platformName),
+              onTap: () async {
+                await scanResults[i].device.connect(license: License.free);
+                setState(() => connectedDevice = scanResults[i].device);
+              },
+            ),
+          ),
         ),
       ],
     );
   }
 
-  // TELA 2: Os Sliders e Controles
-  Widget _buildTelaDeControle() {
-    if (_servoCharacteristic == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('Posição do Servo', style: TextStyle(fontSize: 24)),
-          Text('${_servoPosicao.toInt()}°', style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
-          Slider(
-            value: _servoPosicao,
-            min: 0, 
-            max: 250, 
-            onChanged: (novoValor) {
-              setState(() {
-                _servoPosicao = novoValor;
-              });
-              _enviarPosicaoServo(novoValor); 
-            },
+  // Widget do painel de controle após conectar
+  Widget _buildControlPanel() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Conectado a: ${connectedDevice!.platformName}", style: const TextStyle(fontWeight: FontWeight.bold)),
+        const Divider(height: 30),
+        
+        const Text("Escolha o comando:"),
+        const SizedBox(height: 8),
+        
+        // --- DROPDOWN PARA ESCOLHER O COMANDO ---
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(8)),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<BleCommand>(
+              value: selectedCommand,
+              isExpanded: true,
+              items: myCommands.map((cmd) {
+                return DropdownMenuItem(value: cmd, child: Text(cmd.name));
+              }).toList(),
+              onChanged: (value) => setState(() => selectedCommand = value!),
+            ),
           ),
-        ],
-      ),
+        ),
+        
+        const SizedBox(height: 20),
+        Text("UUID Alvo: ${selectedCommand.charUuid}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 10),
+
+        TextField(
+          controller: _valueController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: const InputDecoration(
+            labelText: "Valor uint8 (0-255)",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+            onPressed: sendData,
+            child: Text("ENVIAR ${selectedCommand.name.toUpperCase()}"),
+          ),
+        ),
+        
+        const Spacer(),
+        TextButton(
+          onPressed: () {
+            connectedDevice!.disconnect();
+            setState(() => connectedDevice = null);
+          },
+          child: const Center(child: Text("Desconectar", style: TextStyle(color: Colors.red))),
+        )
+      ],
     );
   }
 }
