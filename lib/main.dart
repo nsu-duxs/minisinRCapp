@@ -9,9 +9,9 @@ class BleCommand {
   final String name;
   final String serviceUuid;
   final String charUuid;
-  //final String tipo; // para adicionar alguns parametros que são float e bool
+  final String tipo; // para adicionar alguns parametros que são float e bool
 
-  BleCommand({required this.name, required this.serviceUuid, required this.charUuid});
+  BleCommand({required this.name, required this.serviceUuid, required this.charUuid, this.tipo = "int8"});
 }
 
 class BLEWriteApp extends StatefulWidget {
@@ -25,6 +25,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   BluetoothDevice? connectedDevice;
   List<ScanResult> scanResults = [];
   bool isScanning = false;
+
   
   final TextEditingController _valueController = TextEditingController();
   
@@ -34,7 +35,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
     BleCommand(name: "Servo inicial", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "31296a63-d6ce-4daf-a4a8-0f4d59907071"),
 
-    BleCommand(name: "Servo Ativado (0 ou 1)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74"),
+    BleCommand(name: "Servo Ativado (0 ou 1)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74",  tipo: "bool"),
 
     BleCommand(name: "giro45 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70"),
 
@@ -44,9 +45,9 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
     BleCommand(name: "giro 90 Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "48e04e0d-f49c-4d1f-b3c1-51cdd10cbd65"),
 
-    BleCommand(name: "arco anti-Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3"),
+    BleCommand(name: "arco anti-Horario/ 10", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3"),
 
-    BleCommand(name: "arco Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d"),
+    BleCommand(name: "arco Horario / 10", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d"),
     
     BleCommand(name: "arco shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7a2a2932-c806-4068-a3e3-e78e640a2a07"),
 
