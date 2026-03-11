@@ -28,6 +28,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
   
   final TextEditingController _valueController = TextEditingController();
+  int booleano = 0; 
   
   // 2. CADASTRE SEUS UUIDS AQUI
   final List<BleCommand> myCommands = [
@@ -35,7 +36,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
     BleCommand(name: "Servo inicial", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "31296a63-d6ce-4daf-a4a8-0f4d59907071"),
 
-    BleCommand(name: "Servo Ativado (0 ou 1)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74",  tipo: "bool"),
+    BleCommand(name: "Servo Ativado", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74",  tipo: "bool"),
 
     BleCommand(name: "giro45 Anti Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70"),
 
@@ -95,12 +96,18 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   // Função para enviar o dado
   Future<void> sendData() async {
     if (connectedDevice == null) return;
-
-    int? val = int.tryParse(_valueController.text);
-    if (val == null || val < 0 || val > 255) {
+    int? val;
+    if(selectedCommand.tipo == "in8"){
+    val = int.tryParse(_valueController.text);
+    if (val == null || val < 0 || val >255) {
       _showMsg("Digite um valor entre 0 e 255");
       return;
+    }}
+    else if(selectedCommand.tipo == "bool")
+    {
+      val = booleano;
     }
+    else{return;}
 
     try {
       List<BluetoothService> services = await connectedDevice!.discoverServices();
@@ -208,7 +215,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
               ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               onPressed :() {
-                
+                booleano = 1;
               },
               child: Text("ativar"),
 
@@ -216,7 +223,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
               ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               onPressed: () {
-                
+                booleano = 0;
               },
               child: Text("desativar"),
               ),
