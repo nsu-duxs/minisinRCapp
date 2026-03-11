@@ -15,10 +15,11 @@ jobs:
       - run: flutter pub get
       - run: flutter build apk --release
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          archive: false
 
   build-ios:
     runs-on: macos-latest
@@ -42,7 +43,8 @@ jobs:
           
       # 3. Faz o upload do .ipa gerado para você baixar no GitHub
       - name: Upload IPA
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-release-ipa
           path: app-release.ipa
+          archive: false
