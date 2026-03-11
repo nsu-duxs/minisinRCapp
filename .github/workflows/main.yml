@@ -2,7 +2,7 @@ name: Build Flutter Apps
 
 on:
   push:
-    branches: [ "new-ap" ]
+    branches: [ "main" ]
 
 jobs:
   build-android:
