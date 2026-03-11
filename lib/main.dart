@@ -75,6 +75,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
   // Comando selecionado no Dropdown
   late BleCommand selectedCommand;
+  
+
 
   @override
   void initState() {
@@ -192,7 +194,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
         Text("UUID Alvo: ${selectedCommand.charUuid}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 10),
 
-        TextField(
+        selectedCommand.tipo == "int8" ? TextField(
           controller: _valueController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -200,7 +202,29 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
             labelText: "Valor uint8 (0-255)",
             border: OutlineInputBorder(),
           ),
-        ),
+          ) 
+          : Row(
+            children:[
+              ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              onPressed :() {
+                
+              },
+              child: Text("ativar"),
+
+            ),
+              ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              onPressed: () {
+                
+              },
+              child: Text("desativar"),
+              ),
+            
+            ],
+          ),
+
+        
         
         const SizedBox(height: 20),
         SizedBox(
