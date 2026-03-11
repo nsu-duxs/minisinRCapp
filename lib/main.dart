@@ -46,9 +46,9 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
     BleCommand(name: "giro 90 Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "48e04e0d-f49c-4d1f-b3c1-51cdd10cbd65"),
 
-    BleCommand(name: "arco anti-Horario/ 10", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3"),
+    BleCommand(name: "arco anti-Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3", tipo: "int16"),
 
-    BleCommand(name: "arco Horario / 10", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d"),
+    BleCommand(name: "arco Horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d", tipo:"int16"),
     
     BleCommand(name: "arco shikiri anti-horario", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7a2a2932-c806-4068-a3e3-e78e640a2a07"),
 
