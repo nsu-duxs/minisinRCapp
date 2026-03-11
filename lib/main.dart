@@ -107,6 +107,15 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
     {
       val = booleano;
     }
+    else if(selectedCommand.tipo == "int16")
+    {
+      val = int.tryParse(_valueController.text);
+      if(val == null || val<0 || val > 65535)
+      {
+        _showMsg("Digite um numero entre o e 65535");
+        return;
+      }
+    }
     else{return;}
 
     try {
@@ -210,12 +219,14 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
             border: OutlineInputBorder(),
           ),
           ) 
-          : Row(
+          : selectedCommand.tipo == "bool" ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children:[
               ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               onPressed :() {
                 booleano = 1;
+              
               },
               child: Text("ativar"),
 
@@ -229,8 +240,18 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
               ),
             
             ],
+          ) 
+          : selectedCommand.tipo == "float" ?
+          TextField(
+            controller: _valueController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: ("valor de int16(>255)"),
+              border: OutlineInputBorder(),
           ),
 
+          )
+          : SizedBox.shrink(),
         
         
         const SizedBox(height: 20),
