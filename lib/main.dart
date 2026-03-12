@@ -241,10 +241,11 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
             
             ],
           ) 
-          : selectedCommand.tipo == "float" ?
+          : selectedCommand.tipo == "int16" ?
           TextField(
             controller: _valueController,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: const InputDecoration(
               labelText: ("valor de int16(>255)"),
               border: OutlineInputBorder(),
