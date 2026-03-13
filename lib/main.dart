@@ -38,9 +38,9 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
     BleCommand(name: "Servo Ativado", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "01f0d89c-ed13-46db-98b3-e93d485fdc74", tipo: "bool"),
 
     // --- BLOCO VELOCIDADE E MARCHAS ---
-    BleCommand(name: "Min PWM", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b1a10001-ce95-4ada-b8f5-9c63ff4e61ad"),
-    BleCommand(name: "Velocidade Máxima (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b1a10002-ce95-4ada-b8f5-9c63ff4e61ad"),
-    BleCommand(name: "Limite Troca Marcha", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b1a10003-ce95-4ada-b8f5-9c63ff4e61ad"),
+    BleCommand(name: "Min PWM", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ad4291a8-91c5-4922-9ce0-a30f6e59b671"),
+    BleCommand(name: "Velocidade Máxima (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b16d51d4-03d7-45b4-9677-8ffaf5dc13ab"),
+    BleCommand(name: "Limite Troca Marcha", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "a69aa49a-1267-4b8a-934d-4336cc1cfbde"),
 
     // --- BLOCO GIROS (TEMPOS) ---
     BleCommand(name: "Giro 45 Anti-Horário", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "aed55e60-5927-4d22-ad1c-c2135096df70"),
@@ -50,19 +50,17 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 
     // --- BLOCO ARCOS (TEMPOS E VELOCIDADES) ---
     BleCommand(name: "Arco Anti-Horário (Tempo)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "ebd8a9e4-085a-41ed-bd4f-0e46cbd1c4b3", tipo: "int16"),
-    BleCommand(name: "Velo. Esq. Arco Anti (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "v001a490-ce95-4ada-b8f5-9c63ff4e61ad"),
+    BleCommand(name: "Velo. Esq. Arco Anti (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "00a6431e-b818-45c7-96d2-fb1e4df4a8f8"),
     BleCommand(name: "Arco Horário (Tempo)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "866001fe-5690-4e56-96fc-ce17687f0d5d", tipo: "int16"),
-    BleCommand(name: "Velo. Dir. Arco Hor (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "v002a490-ce95-4ada-b8f5-9c63ff4e61ad"),
+    BleCommand(name: "Velo. Dir. Arco Hor (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "10a686f0-04a1-4e26-9b64-586bcd9ea8ed"),
 
     BleCommand(name: "Arco Shikiri Anti (Tempo)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7a2a2932-c806-4068-a3e3-e78e640a2a07"),
-    BleCommand(name: "Velo. Esq. Shikiri Anti (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "v003a490-ce95-4ada-b8f5-9c63ff4e61ad"),
+    BleCommand(name: "Velo. Esq. Shikiri Anti (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "5747facc-26b2-4c6c-84b1-c825f4d918d2"),
     BleCommand(name: "Arco Shikiri Hor (Tempo)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "3d0ac383-e16a-4e42-870d-f2a859efe8c0"),
-    BleCommand(name: "Velo. Dir. Shikiri Hor (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "v004a490-ce95-4ada-b8f5-9c63ff4e61ad"),
+    BleCommand(name: "Velo. Dir. Shikiri Hor (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "8df745c5-b4b9-4771-a104-a03ee3b0d83a"),
 
     BleCommand(name: "Arco Borda Anti (Tempo)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7d049e22-20f6-4e01-b018-7e8fcf8ac91b"),
-    BleCommand(name: "Velo. Esq. Borda Anti (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "v005a490-ce95-4ada-b8f5-9c63ff4e61ad"),
     BleCommand(name: "Arco Borda Hor (Tempo)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "7bd3ee6f-c6a8-4591-852a-93af450cb940"),
-    BleCommand(name: "Velo. Dir. Borda Hor (%)", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "v006a490-ce95-4ada-b8f5-9c63ff4e61ad"),
 
     // --- BLOCO ZIG-ZAG ---
     BleCommand(name: "Zig-Zag Anti-Horário", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "65f2b4cc-cb29-4464-8695-f7d929fe3a79"),
@@ -73,9 +71,9 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
     BleCommand(name: "Zig-Zag Borda Hor", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "adbfa60f-3068-4cfb-b0c4-382977d1dc23"),
 
     // --- BLOCO EXTRAS ---
-    BleCommand(name: "Controle Agressivo", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b1a10004-ce95-4ada-b8f5-9c63ff4e61ad", tipo: "bool"),
-    BleCommand(name: "Tempo Stop Motors", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b1a10005-ce95-4ada-b8f5-9c63ff4e61ad"),
-    BleCommand(name: "Inversão Motores", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "b1a10006-ce95-4ada-b8f5-9c63ff4e61ad", tipo: "bool"),
+    BleCommand(name: "Controle Agressivo", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "1c96b06e-8c40-4595-98e8-216ff1b31837", tipo: "bool"),
+    BleCommand(name: "Tempo Stop Motors", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "2e3ec45b-5ed5-4a25-993b-bba6b90d2d27"),
+    BleCommand(name: "Inversão Motores", serviceUuid: "41a490f5-ce95-4ada-b8f5-9c63ff4e61ad", charUuid: "eecc8392-060e-4265-aacb-e52e3ec65d66", tipo: "bool"),
   ];
   // Comando selecionado no Dropdown
   late BleCommand selectedCommand;
@@ -100,7 +98,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   Future<void> sendData() async {
     if (connectedDevice == null) return;
     int? val;
-    if(selectedCommand.tipo == "in8"){
+    if(selectedCommand.tipo == "int8"){
     val = int.tryParse(_valueController.text);
     if (val == null || val < 0 || val >255) {
       _showMsg("Digite um valor entre 0 e 255");
