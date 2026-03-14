@@ -1,8 +1,9 @@
 name: Build Flutter Apps
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["Builds ios e android"]
+    types: [requested]
 
 jobs:
   build-android:
