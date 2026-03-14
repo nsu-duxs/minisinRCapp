@@ -140,15 +140,13 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
                     String uuidDoServico = servico.uuid.toString().toUpperCase();
                       for (var caracteristica in servico.characteristics) {
                         String uuidDaCaracteristica = caracteristica.uuid.toString().toUpperCase();
-                        String nomeCaracteristica = "desconhecido";
-                        String tipoCaracteristica = "int8";
                         for(var nome in caracteristica.descriptors)
                         {
-                          if( nome.toString().toUpperCase().contains("NOME:")){nomeCaracteristica =  nome.read().toString().replaceAll("NOME:", "").replaceAll(" ", "");}
-                          if( nome.toString().toUpperCase().contains("TIPO:")){tipoCaracteristica =  nome.read().toString().replaceAll("TIPO:", "").replaceAll(" ", "");}
-                          else{nomeCaracteristica = nome.read().toString();}
+                          String nomeCaracteristica = nome.read().toString().split(":").first;
+                          String tipoCaracteristica = nome.read().toString().split(":").last;
+                          myCommands.add(BleCommand(name: nomeCaracteristica, serviceUuid: uuidDoServico, charUuid: uuidDaCaracteristica, tipo: tipoCaracteristica));
+
                         }
-                        myCommands.add(BleCommand(name: nomeCaracteristica, serviceUuid: uuidDoServico, charUuid: uuidDaCaracteristica, tipo: tipoCaracteristica));
                       }
                     
                   }
