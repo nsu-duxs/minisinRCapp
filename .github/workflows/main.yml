@@ -1,9 +1,7 @@
 name: Build Flutter Apps
 
 on:
-  workflow_run:
-    workflows: ["Builds ios e android"]
-    types: [requested]
+  workflow_dispatch:
 
 jobs:
   build-android:
