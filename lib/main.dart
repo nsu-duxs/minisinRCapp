@@ -100,6 +100,27 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
     }
   }
 
+  Future<String> readData() async {
+    if (connectedDevice == null) return "Nenhum dispositivo encontrado";
+    try {
+      List<BluetoothService> services = await connectedDevice!.discoverServices();
+      
+      for (var s in services) {
+        if (s.uuid.toString().toUpperCase().contains(selectedCommand!.serviceUuid.toUpperCase())) {
+          for (var c in s.characteristics) {
+            if (c.uuid.toString().toUpperCase().contains(selectedCommand!.charUuid.toUpperCase())) {
+              var value = await c.read().toString();
+              return "Valor lido: $value";
+            }
+          }
+        }
+      }
+      return "Erro: UUID não encontrado no hardware!";
+    } catch (e) {
+      return "Erro na leitura: $e";
+    }
+  }
+
   void _showMsg(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -189,6 +210,10 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
             ),
           ),
         ),
+        
+        
+        const SizedBox(height: 20),
+        Text("${selectedCommand!.name}: $readData", style: const TextStyle(fontSize: 12, color: Colors.grey)),
         
         const SizedBox(height: 20),
         Text("UUID Alvo: ${selectedCommand!.charUuid}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
