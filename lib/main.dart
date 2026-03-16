@@ -36,6 +36,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   ];
   // Comando selecionado no Dropdown
   BleCommand? selectedCommand;
+
+  String? valorAtual;
   
 
 
@@ -100,8 +102,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
     }
   }
 
-  Future<String> readData() async {
-    if (connectedDevice == null) return "Nenhum dispositivo encontrado";
+  Future<void> readData() async {
+    if (connectedDevice == null) return;
     try {
       List<BluetoothService> services = await connectedDevice!.discoverServices();
       
@@ -109,15 +111,14 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
         if (s.uuid.toString().toUpperCase().contains(selectedCommand!.serviceUuid.toUpperCase())) {
           for (var c in s.characteristics) {
             if (c.uuid.toString().toUpperCase().contains(selectedCommand!.charUuid.toUpperCase())) {
-              var value = await c.read().toString();
-              return "Valor lido: $value";
+              var value = await c.read();
+              valorAtual = value.toString();
             }
           }
         }
       }
-      return "Erro: UUID não encontrado no hardware!";
     } catch (e) {
-      return "Erro na leitura: $e";
+      _showMsg("Erro na leitura: $e");
     }
   }
 
@@ -131,13 +132,24 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
       appBar: AppBar(title: const Text("BLE Command Center")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: connectedDevice == null ? _buildScanList() : _buildControlPanel(),
+        child: FutureBuilder<Widget>(
+          future: connectedDevice == null ? _buildScanList() : _buildControlPanel(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Erro: ${snapshot.error}'));
+            } else {
+              return snapshot.data ?? const SizedBox.shrink();
+            }
+          },
+        ),
       ),
     );
   }
 
   // Widget da lista de escaneamento
-  Widget _buildScanList() {
+  Future<Widget> _buildScanList() async{
     return Column(
       children: [
         ElevatedButton(
@@ -185,7 +197,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
   }
 
   // Widget do painel de controle após conectar
-  Widget _buildControlPanel() {
+  Future<Widget> _buildControlPanel() async {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -213,7 +225,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
         
         
         const SizedBox(height: 20),
-        Text("${selectedCommand!.name}: $readData", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+
+        Text("${selectedCommand!.name}: $valorAtual", style: const TextStyle(fontSize: 12, color: Colors.grey)),
         
         const SizedBox(height: 20),
         Text("UUID Alvo: ${selectedCommand!.charUuid}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
