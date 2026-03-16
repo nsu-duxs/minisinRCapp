@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -111,8 +113,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
         if (s.uuid.toString().toUpperCase().contains(selectedCommand!.serviceUuid.toUpperCase())) {
           for (var c in s.characteristics) {
             if (c.uuid.toString().toUpperCase().contains(selectedCommand!.charUuid.toUpperCase())) {
-              var value = await c.read();
-              valorAtual = value.toString();
+              List<int> value = await c.read();
+              valorAtual = utf8.decode(value);
             }
           }
         }
@@ -175,8 +177,10 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
                         String uuidDaCaracteristica = caracteristica.uuid.toString().toUpperCase();
                         for(var nome in caracteristica.descriptors)
                         {
-                          String nomeCaracteristica = nome.read().toString().split(":").first;
-                          String tipoCaracteristica = nome.read().toString().split(":").last;
+                          List<int> value = await nome.read();
+                          String nomeCaracteristica = utf8.decode(value).split(":").first;
+
+                          String tipoCaracteristica = utf8.decode(value).split(":").last;
                           myCommands.add(BleCommand(name: nomeCaracteristica, serviceUuid: uuidDoServico, charUuid: uuidDaCaracteristica, tipo: tipoCaracteristica));
 
                         }
