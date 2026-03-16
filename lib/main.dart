@@ -185,11 +185,14 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
                         for(var nome in caracteristica.descriptors)
                         {
                           List<int> value = await nome.read();
-                          String nomeCaracteristica = utf8.decode(value).split(":").first;
+                          String temp = utf8.decode(value);
+                          if(temp.contains(":"))
+                          {
+                            String nomeCaracteristica = utf8.decode(value).split(":").first;
 
-                          String tipoCaracteristica = utf8.decode(value).split(":").last;
-                          myCommands.add(BleCommand(name: nomeCaracteristica, serviceUuid: uuidDoServico, charUuid: uuidDaCaracteristica, tipo: tipoCaracteristica));
-
+                            String tipoCaracteristica = utf8.decode(value).split(":").last;
+                            myCommands.add(BleCommand(name: nomeCaracteristica, serviceUuid: uuidDoServico, charUuid: uuidDaCaracteristica, tipo: tipoCaracteristica));
+                          }
                         }
                       }
                     
