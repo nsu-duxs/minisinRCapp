@@ -172,36 +172,60 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
             itemBuilder: (context, i) => ListTile(
               title: Text(scanResults[i].device.platformName.isEmpty ? "Disp. Desconhecido" : scanResults[i].device.platformName),
               onTap: () async {
-                await scanResults[i].device.connect(license: License.free);
-                // adicionar fução de ler características e criar a lista de classes:
-                _showMsg("Montando lista de parametros antes de conectar");
-                try {
-                  List<BluetoothService> services = await connectedDevice!.discoverServices();
+                BluetoothDevice device = scanResults[i].device; // Salva o dispositivo alvo
                 
+                _showMsg("Conectando e montando lista... Aguarde.");
+                await device.connect(license: License.free);
+                
+                try {
+                  // 1. Usa o 'device' recém conectado ao invés de 'connectedDevice'
+                  List<BluetoothService> services = await device.discoverServices();
+                
+                  // 2. Cria uma lista temporária limpa
+                  List<BleCommand> comandosLidos = [];
+
                   for (var servico in services) {
                     String uuidDoServico = servico.uuid.toString().toUpperCase();
-                      for (var caracteristica in servico.characteristics) {
-                        String uuidDaCaracteristica = caracteristica.uuid.toString().toUpperCase();
-                        for(var nome in caracteristica.descriptors)
-                        {
-                          List<int> value = await nome.read();
+                    for (var caracteristica in servico.characteristics) {
+                      String uuidDaCaracteristica = caracteristica.uuid.toString().toUpperCase();
+                      
+                      for(var descriptor in caracteristica.descriptors) {
+                        // 3. TRY/CATCH AQUI DENTRO! Se um descritor falhar, ele não cancela os outros
+                        try {
+                          List<int> value = await descriptor.read();
                           String temp = utf8.decode(value);
-                          if(temp.contains(":"))
-                          {
-                            String nomeCaracteristica = utf8.decode(value).split(":").first;
-
-                            String tipoCaracteristica = utf8.decode(value).split(":").last;
-                            myCommands.add(BleCommand(name: nomeCaracteristica, serviceUuid: uuidDoServico, charUuid: uuidDaCaracteristica, tipo: tipoCaracteristica));
+                          
+                          if(temp.contains(":")) {
+                            String nomeCaracteristica = temp.split(":").first;
+                            String tipoCaracteristica = temp.split(":").last;
+                            
+                            comandosLidos.add(BleCommand(
+                              name: nomeCaracteristica, 
+                              serviceUuid: uuidDoServico, 
+                              charUuid: uuidDaCaracteristica, 
+                              tipo: tipoCaracteristica
+                            ));
                           }
+                        } catch (e) {
+                          // Ignora o descritor que deu erro (muitos são bloqueados por padrão no BLE)
                         }
                       }
-                    
+                    }
                   }
-                  _showMsg("Erro: UUID não encontrado no hardware!");
+
+                  // 4. Se encontrou comandos, atualiza as variáveis. Só agora chamamos o setState!
+                  setState(() {
+                    if (comandosLidos.isNotEmpty) {
+                      myCommands = comandosLidos;
+                    }
+                    selectedCommand = myCommands.first;
+                    connectedDevice = device; // Agora sim a tela vai mudar para o Painel de Controle
+                  });
+
                 } catch (e) {
-                  _showMsg("Erro na escrita: $e");
+                  _showMsg("Erro geral ao ler o BLE: $e");
+                  device.disconnect();
                 }
-                setState(() => connectedDevice = scanResults[i].device);
               },
             ),
           ),
