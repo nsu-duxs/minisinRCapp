@@ -80,6 +80,14 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
         return;
       }
     }
+    else if(selectedCommand!.tipo == "float")
+    {
+      val = int.tryParse(_valueController.text);
+      if (val == null || val < 0 || val >100) {
+        _showMsg("Digite um valor entre 0 e 100");
+        return;
+      }
+    }
     else{return;}
 
     try {
@@ -165,9 +173,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
               title: Text(scanResults[i].device.platformName.isEmpty ? "Disp. Desconhecido" : scanResults[i].device.platformName),
               onTap: () async {
                 await scanResults[i].device.connect(license: License.free);
-                setState(() => connectedDevice = scanResults[i].device);
                 // adicionar fução de ler características e criar a lista de classes:
-
+                _showMsg("Montando lista de parametros antes de conectar");
                 try {
                   List<BluetoothService> services = await connectedDevice!.discoverServices();
                 
@@ -191,7 +198,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
                 } catch (e) {
                   _showMsg("Erro na escrita: $e");
                 }
-
+                setState(() => connectedDevice = scanResults[i].device);
               },
             ),
           ),
@@ -278,6 +285,17 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
           ),
 
           )
+          : selectedCommand!.tipo == "float" ?
+          TextField(
+            controller: _valueController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: ("digite um valor de 1 a 100"),
+              border: OutlineInputBorder(),
+          ),
+
+          )
           : SizedBox.shrink(),
         
         
@@ -297,6 +315,9 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
           onPressed: () {
             connectedDevice!.disconnect();
             setState(() => connectedDevice = null);
+            myCommands = [
+              BleCommand(name: "Null", serviceUuid: "1234", charUuid: "5678"),
+            ];
           },
           child: const Center(child: Text("Desconectar", style: TextStyle(color: Colors.red))),
         )
