@@ -127,7 +127,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
 								{
 									valorAtual = value[0].toString();
 								}
-							})
+							});
             }
           }
         }
