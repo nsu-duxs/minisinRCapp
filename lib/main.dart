@@ -101,6 +101,7 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
               
               await c.write([val], withoutResponse: false);
               _showMsg("Enviado: ${selectedCommand!.name} = $val");
+              readData();
               return;
             }
           }
@@ -261,7 +262,8 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
               items: myCommands.map((cmd) {
                 return DropdownMenuItem(value: cmd, child: Text(cmd.name));
               }).toList(),
-              onChanged: (value) => setState(() => selectedCommand = value!),
+              onChanged: (value) => setState(() { selectedCommand = value!; 
+              readData();}),
             ),
           ),
         ),
