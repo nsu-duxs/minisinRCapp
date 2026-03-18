@@ -121,8 +121,13 @@ class _BLEWriteAppState extends State<BLEWriteApp> {
         if (s.uuid.toString().toUpperCase().contains(selectedCommand!.serviceUuid.toUpperCase())) {
           for (var c in s.characteristics) {
             if (c.uuid.toString().toUpperCase().contains(selectedCommand!.charUuid.toUpperCase())) {
-              List<int> value = await c.read();
-              valorAtual = utf8.decode(value);
+							List<int> value = await c.read();
+              setState(() {
+              if(value.isNotEmpty) 
+								{
+									valorAtual = value[0].toString();
+								}
+							})
             }
           }
         }
