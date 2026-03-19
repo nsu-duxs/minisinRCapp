@@ -1,8 +1,7 @@
 name: Build Flutter Apps
 
 on:
-  push:
-    branches: ["conexao_generica"]
+  workflow_dispatch:
 
 jobs:
   build-android:
